@@ -26,6 +26,7 @@
 - 產生完 80 個 wav 檔案後 sleep 1秒，避免檔案還沒完全處理好就cascade而報錯
 ### 3. 編譯並執行cascade.c
 - cascade將讀入scp.txt檔案，一行一行提取檔名，前40行當8kHz，後40行當16kHz (此控制可以在cascade.c中看見)
+- cascade中，讀入一個檔案並把資料寫進s-8kHz.wav (以前40個為例)後，就會將該使用過的wav檔案移除
 - 80個wav檔案結合成s-8kHz.wav s-16kHz.wav，並放在同一個目錄
 - 結合完後，把scp.txt移到tmp資料夾，並移除sinegen.exe、cascade.exe
 ### 4. 編譯並執行 spectrogram.c、spectshow.py (此過程非常耗時)
