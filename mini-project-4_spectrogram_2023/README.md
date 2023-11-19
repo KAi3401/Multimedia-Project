@@ -52,7 +52,7 @@
 ### 3. spectrogram.c
 - 透過指令./spectrogram w_size "w_type dft_size f_itv input_file output_file 來執行
 - 一開始先讀入wav檔header有需要的資訊，例如fs、dataSize等等
- - 接著定義一些需要用到的變數：
+- 接著定義一些需要用到的變數：
   - int fs = header.sampleRate;
   - int frameInterval = fs / 1000 * f_itv;
   - int windowSize = fs / 1000 * w_Size;
@@ -71,8 +71,8 @@ for (int i = 0; i < DFT_window; i++)
 - 接著就可以進入以下while迴圈，這個迴圈內容為：
   - 取一個 w_size(外部輸入)大小的資料量下去套window，並且拿套完 window 的 DFT_data 去計算DFT
   - 因為DFT_data一開始宣告都是0，因此當 w_size < dft_size，就有自動補0的功效
-  - 然後在 computeDFT5中，會把算完的DFT資料放進 全域變數 specData，然後接著就把specDate寫進.txt檔
-  - 接著繼續做下一個frame
+  - 然後在 computeDFT中，會把算完的DFT資料放進 全域變數 specData，然後接著就把specDate寫進.txt檔
+  - 接著繼續做下一個frame，直到切的window超出原始dataSize
 ```
     while (cur < numSamples)
     {
@@ -103,3 +103,4 @@ for (int i = 0; i < DFT_window; i++)
         frameIndex++;
     }
 ```
+### 4. spectrogram.py
