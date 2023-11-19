@@ -3,7 +3,7 @@
 - 此外，spectshow.py需要numpy、matplot、scipy等函式庫，請確保有安裝
 - mini-project-4.sh內會使用gcc來compile .c檔
 ## 執行預期結果
-- 在執行 mini-project-4.sh 之後，會看到一些執行過程資訊以及執行進度，預估會執行1分30秒左右
+- 在執行 mini-project-4.sh 之後，會看到一些執行過程資訊以及執行進度，預估會執行1分20秒左右
 - 最終在資料夾中會看到的檔案有：
   - result 資料夾 (存放圖片.pdf)
   - tmp 資料夾 (存放過程檔案)
