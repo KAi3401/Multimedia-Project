@@ -47,7 +47,11 @@
 - 透過指令 ./2 scp.txt s-8kHz.wav s-16kHz.wav來執行
 - 一開始會先用fopen創建s-8kHz.wav s-16kHz.wav，並且先幫他們寫好header，因為dataSize、sample rate、sample bit等等都是已知資訊，dataSize只要取原本sinegen.c產生出來的dataSize * 40即可。
 - 接著fopen打開scp.txt，並且透過迴圈 for(int i=0;i<80;++i)來讀入scp.txt的每一行
-- scp.txt每一行對應一個wav檔，我用fseek跳過他的header，並用while ((c = fgetc(inputFile)) != EOF) fputc(c, outputFile1);來把該wav檔案的data放進對應的.wav。
+- scp.txt每一行對應一個wav檔，我用fseek跳過他的header，並用
+```c
+while ((c = fgetc(inputFile)) != EOF) fputc(c, outputFile1);
+```
+- 來把該wav檔案的data放進對應的.wav。
 - 前40行 (i<40)將資料放進s-8kHz.wav，反之則放進s-16kHz.wav。
 ### 3. spectrogram.c
 - 透過指令./spectrogram w_size "w_type dft_size f_itv input_file output_file 來執行
@@ -57,10 +61,13 @@
   - int frameInterval = fs / 1000 * f_itv;
   - int windowSize = fs / 1000 * w_Size;
   - int DFT_window = fs / 1000 * DFT_Size;
-- 接著mallac一個陣列來存wav的所有data(header除外) int16_t *data = (int16_t *)malloc((numSamples + DFT_window) * sizeof(int16_t));
+- 接著mallac一個陣列來存wav的所有data(header除外)
+```c
+int16_t *data = (int16_t *)malloc((numSamples + DFT_window) * sizeof(int16_t));
+```
 - 大小為numSamples + DFT_window是因為有可能取window會取超過data，然後padding zero
 - 然後先建立cos、sin表格，以後就可以查表避免重複計算
-```
+```c
 for (int i = 0; i < DFT_window; i++)
     {
         angle = 2 * PI * i / DFT_window;
@@ -72,8 +79,9 @@ for (int i = 0; i < DFT_window; i++)
   - 取一個 w_size(外部輸入)大小的資料量下去套window，並且拿套完 window 的 DFT_data 去計算DFT
   - 因為DFT_data一開始宣告都是0，因此當 w_size < dft_size，就有自動補0的功效
   - 然後在 computeDFT中，會把算完的DFT資料放進 全域變數 specData，然後接著就把specDate寫進.txt檔
+  - .txt檔案中，每一行為一個frame的資訊，裡面存放的頻率強度由逗號隔開
   - 接著繼續做下一個frame，直到切的window超出原始dataSize
-```
+```c
     while (cur < numSamples)
     {
         int16_t DFT_data[512] = {0};
@@ -103,4 +111,106 @@ for (int i = 0; i < DFT_window; i++)
         frameIndex++;
     }
 ```
+```c
+void computeDFT(int16_t *DFT_data, int DFT_window)
+{
+    for (int k = 0; k < DFT_window / 2; k++)
+    {
+        double real = 0.0;
+        double imag = 0.0;
+
+        for (int n = 0; n < DFT_window; n++)
+        {
+            int freq = (n * k) % DFT_window;
+            // 使用查表，避免重複計算
+            real += DFT_data[n] * cos_values[freq];
+            imag -= DFT_data[n] * sin_values[freq];
+        }
+
+        double sum = sqrt(real * real + imag * imag);
+
+        if (sum < 1)
+        {
+            specData[k] = 0;
+        }
+        else
+        {
+            specData[k] = 20 * log10(sum);
+        }
+    }
+}
+```
 ### 4. spectrogram.py
+- 透過指令python3 spectshow.py spec.txt input.wav output_file.pdf來執行
+- 一開始我用正規表達式來提取檔名中的一些資訊，可以做為後面輸出檔案、圖片title的元素
+- 接著我判斷檔名中寫的是'8k' 或是'16k'，並且有對應的設定方便以下做處理
+```python
+# 使用正規表達式匹配所需部分
+match = re.match(r'([a-zA-Z-]+-[0-9]+kHz)_setting\d+\.txt', file_name)
+if match:
+    prefix = match.group(1)
+else:
+    prefix = "Unknown"
+
+# 根據檔案名稱判斷 X 和 Y 的值
+if "16k" in file_name:
+    X = 256
+    Y = 8000
+else:
+    X = 128
+    Y = 4000
+
+# 使用正規表達式提取 "setting" 後的數字
+set_number = re.search(r'setting(\d+)', file_name).group(1)
+```
+- Y為頻率軸(y軸)的上限，X為一個frame中有多少頻率的資訊 (假設8k取樣率、DFT_SIZE=32ms，就會有256個資訊，但是有一半會是對稱的，所以取128)
+- 接著我會稍微加強spectrogram的明暗對比度，假設原始資料是x，我透過 $\(x' = \frac{x^3}{10000}\)$的方式來加強對比，使其圖片更像ocenaudio中所展示的
+```python
+# 計算行數
+num_lines = len(lines)
+
+# 初始化一個二維 NumPy 陣列
+data = np.zeros((num_lines, X))
+
+# 將數字填入陣列
+for i, line in enumerate(lines):
+    # 將每一行的 double 數字分割並轉換為浮點數
+    numbers = [float(x) * float(x) * float(x) / 10000 for x in line.split(',')]
+    # 將數字存入 NumPy 陣列
+    data[i, :] = numbers
+```
+- 最後將wav檔案讀入，並且使wav、spectrogram圖片的x軸互相對應
+- 接著設定好標題、xy軸、強度用灰度表示、frameInterval，就可以產生出圖片了，最後將結果存為pdf即可
+```python
+# 讀取WAV檔案
+sample_rate, wave_data = wavfile.read(file_wave)
+
+# 計算wave的時間軸
+wave_time = np.arange(0, len(wave_data)) / sample_rate
+
+# 定義時間間隔和頻率範圍
+time_interval = 0.01  # 32ms per line
+frequency_range = np.arange(0, Y, Y/X)
+
+# 創建一個figure和axes的陣列
+fig, axs = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+
+# 分別在axes[0]和axes[1]上繪製waveform和spectrogram
+axs[0].plot(wave_time, wave_data)
+axs[0].set_ylabel('Amplitude')
+axs[0].set_title('Waveform')
+axs[0].set_ylim(-32768, 32767)
+
+axs[1].imshow(data.T, aspect='auto', cmap='gray', origin='lower', extent=[0, num_lines*time_interval, 0, Y])
+axs[1].set_xlabel('Time (seconds)')
+axs[1].set_ylabel('Frequency (Hz)')
+axs[1].set_title(f'Spectrogram - {prefix}_setting {set_number}')
+
+# 調整subplot的間距，以免overlap
+plt.tight_layout()
+
+# 保存圖片
+save_path = file_out
+plt.savefig(save_path, dpi=1200)
+plt.close()
+```
