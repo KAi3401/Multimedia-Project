@@ -69,9 +69,10 @@ for (int i = 0; i < DFT_window; i++)
     }
 ```
 - 接著就可以進入以下while迴圈，這個迴圈內容為：
-  - 取一個 W_SIZE(外部輸入)大小的資料量下去套window，並且拿套完window的DFT_data去計算DFT
-  - 因為DFT_data
-  
+  - 取一個 w_size(外部輸入)大小的資料量下去套window，並且拿套完 window 的 DFT_data 去計算DFT
+  - 因為DFT_data一開始宣告都是0，因此當 w_size < dft_size，就有自動補0的功效
+  - 然後在 computeDFT5中，會把算完的DFT資料放進 全域變數 specData，然後接著就把specDate寫進.txt檔
+  - 接著繼續做下一個frame
 ```
     while (cur < numSamples)
     {
