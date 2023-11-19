@@ -1,7 +1,7 @@
 ## 程式執行說明
 - 在執行mini-project-4.sh之前，請確保本資料夾內的所有檔案都放在同一個目錄下
-- 此外，spectshow.py需要numpy、matplot、scipy等函式庫，請確保有安裝
-- mini-project-4.sh內會使用gcc來compile .c檔
+- 此外，spectshow.py需要**numpy**、**matplot**、**scipy**等函式庫，請確保有安裝
+- mini-project-4.sh內會使用**gcc**來compile .c檔
 ## 執行預期結果
 - 在執行 mini-project-4.sh 之後，會看到一些執行過程資訊以及執行進度，預估會執行1分20秒左右
 - 最終在資料夾中會看到的檔案有：
