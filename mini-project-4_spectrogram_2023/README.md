@@ -1,1 +1,22 @@
-# hello
+## 程式執行說明
+- 在執行mini-project-4.sh之前，請確保本資料夾內的所有檔案都放在同一個目錄下
+- 此外，spectshow.py需要numpy、matplot、scipy等函式庫，請確保有安裝
+- mini-project-4.sh內會使用gcc來compile .c檔
+## 執行預期結果
+- 在執行 mini-project-4.sh 之後，會看到一些執行過程資訊以及執行進度，預估會執行1分30秒左右
+- 最終在資料夾中會看到的檔案有：
+  - result 資料夾 (存放圖片.pdf)
+  - tmp 資料夾 (存放過程檔案)
+  - aeueo-8kHz.wav
+  - aeueo-16kHz.wav
+  - s-8kHz.wav
+  - s-16kHz.wav
+  - cascade.c
+  - sinegen.c
+  - spectrogram.c
+  - spectshow.py
+  - mini-project-4.sh
+- ### 流程
+- sinegen.c所產生的80個wav檔案在結合後，會進行刪除
+- cascade將80個wav檔案結合成s-8kHz.wav s-16kHz.wav，並放在同一個目錄
+- 之後會由spectrogram.c來對4個wav檔套用4組setting，
