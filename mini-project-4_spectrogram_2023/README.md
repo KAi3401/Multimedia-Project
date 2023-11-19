@@ -38,3 +38,67 @@
 - 4個wav檔案跑完4組設定後，刪除 spectrogram.exe
 - 以上就是全部流程
 
+## 程式碼內容概述
+### 1. sinegen.c
+- 透過指令 ./1 fs BITS_PER_SAMPLE wave frequency amplitude duration $out_file 來執行
+- 由於本次project都是使用16bits的sample depth，並且也不需要計算SQNR的功能，因此相較於mini-project-3，我移除了SQNR的相關操作，也移除了8bits、32bits的sample depth的相關操作，使程式碼更加簡短明瞭。
+- 上次作業的振幅是輸入0-1(normalized)，而這次不是，是由-32768-32767 (16bits)，因此我把normalize的功能也拿掉，使程式正常運作
+### 2. cascade.c
+- 透過指令 ./2 scp.txt s-8kHz.wav s-16kHz.wav來執行
+- 一開始會先用fopen創建s-8kHz.wav s-16kHz.wav，並且先幫他們寫好header，因為dataSize、sample rate、sample bit等等都是已知資訊，dataSize只要取原本sinegen.c產生出來的dataSize * 40即可。
+- 接著fopen打開scp.txt，並且透過迴圈 for(int i=0;i<80;++i)來讀入scp.txt的每一行
+- scp.txt每一行對應一個wav檔，我用fseek跳過他的header，並用while ((c = fgetc(inputFile)) != EOF) fputc(c, outputFile1);來把該wav檔案的data放進對應的.wav。
+- 前40行 (i<40)將資料放進s-8kHz.wav，反之則放進s-16kHz.wav。
+### 3. spectrogram.c
+- 透過指令./spectrogram w_size "w_type dft_size f_itv input_file output_file 來執行
+- 一開始先讀入wav檔header有需要的資訊，例如fs、dataSize等等
+ - 接著定義一些需要用到的變數：
+  - int fs = header.sampleRate;
+  - int frameInterval = fs / 1000 * f_itv;
+  - int windowSize = fs / 1000 * w_Size;
+  - int DFT_window = fs / 1000 * DFT_Size;
+- 接著mallac一個陣列來存wav的所有data(header除外) int16_t *data = (int16_t *)malloc((numSamples + DFT_window) * sizeof(int16_t));
+- 大小為numSamples + DFT_window是因為有可能取window會取超過data，然後padding zero
+- 然後先建立cos、sin表格，以後就可以查表避免重複計算
+```
+for (int i = 0; i < DFT_window; i++)
+    {
+        angle = 2 * PI * i / DFT_window;
+        cos_values[i] = cos(angle);
+        sin_values[i] = sin(angle);
+    }
+```
+- 接著就可以進入以下while迴圈，這個迴圈內容為：
+  - 取一個 W_SIZE(外部輸入)大小的資料量下去套window，並且拿套完window的DFT_data去計算DFT
+  - 因為DFT_data
+  
+```
+    while (cur < numSamples)
+    {
+        int16_t DFT_data[512] = {0};
+
+        if (strcmp(w_Type, "Hamming") == 0)
+            HammingWindow(data, cur, windowSize, DFT_data);
+        else if (strcmp(w_Type, "Rectangular") == 0)
+        {
+            RectangularWindow(data, cur, windowSize, DFT_data);
+        }
+        else
+        {
+            printf("Invalid window type");
+        }
+        // Perform DFT
+        computeDFT(DFT_data, DFT_window);
+
+        for (int j = 0; j < range; j++)
+        {
+            fprintf(specFile, "%.2f", specData[j]);
+            if (j != range - 1)
+                fprintf(specFile, ",");
+        }
+        fprintf(specFile, "\n");
+
+        cur += frameInterval;
+        frameIndex++;
+    }
+```
