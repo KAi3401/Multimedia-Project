@@ -16,7 +16,24 @@
   - spectrogram.c
   - spectshow.py
   - mini-project-4.sh
-- ### 流程
-- sinegen.c所產生的80個wav檔案在結合後，會進行刪除
-- cascade將80個wav檔案結合成s-8kHz.wav s-16kHz.wav，並放在同一個目錄
-- 之後會由spectrogram.c來對4個wav檔套用4組setting，
+## mini-project-4.sh 內執行流程 (配合程式碼看會比較好理解)
+### 1. 目錄建立與清理
+- 創建名為result的目錄，以及一個暫存目錄tmp。
+- 檢查tmp目錄是否有檔案，如有則清理。
+- 建立空的scp.txt檔案。
+### 2. 編譯並執行sinegen.c
+- sinegen.c透過shell script產生的80個wav檔案，並把檔案名稱記錄在scp.txt
+- 產生完 80 個 wav 檔案後 sleep 1秒，避免檔案還沒完全處理好就cascade而報錯
+### 3. 編譯並執行cascade.c
+- cascade將讀入scp.txt檔案，一行一行提取檔名，前40行當8kHz，後40行當16kHz (此控制可以在cascade.c中看見)
+- 80個wav檔案結合成s-8kHz.wav s-16kHz.wav，並放在同一個目錄
+- 結合完後，把scp.txt移到tmp資料夾，並移除sinegen.exe、cascade.exe
+### 4. 編譯並執行 spectrogram.c、spectshow.py (此過程非常耗時)
+- 在 mini-project-4.sh 中定義了不同設定、對應的wav檔名
+- 用3層for迴圈來將不同的設定、wav檔案輸入spectrogram.c，將計算結果輸出為output.txt
+- 同樣在for迴圈之內 spectshow.py將讀入 .wav、output.txt、outfile.pdf 並繪製聲紋圖、保存
+- 畫完圖之後，將output.txt移到 tmp 資料夾
+- 以上的output.txt、outfile.pdf等等檔案名稱實際上在for內會有對應的檔名去遍歷，這裡只是代稱
+- 4個wav檔案跑完4組設定後，刪除 spectrogram.exe
+- 以上就是全部流程
+
