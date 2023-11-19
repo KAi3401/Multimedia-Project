@@ -57,7 +57,7 @@ sample_rate, wave_data = wavfile.read(file_wave)
 wave_time = np.arange(0, len(wave_data)) / sample_rate
 
 # 定義時間間隔和頻率範圍
-time_interval = 0.01  # 32ms per line
+time_interval = 0.01  # 10ms per line
 frequency_range = np.arange(0, Y, Y/X)
 
 # 創建一個figure和axes的陣列
