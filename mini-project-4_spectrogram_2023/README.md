@@ -51,7 +51,7 @@
 ```c
 while ((c = fgetc(inputFile)) != EOF) fputc(c, outputFile1);
 ```
-- 來把該wav檔案的data放進對應的.wav。
+- 來把該wav檔案的data放進對應的.wav(例如s-8kHz.wav)。
 - 前40行 (i<40)將資料放進s-8kHz.wav，反之則放進s-16kHz.wav。
 ### 3. spectrogram.c
 - 透過指令./spectrogram w_size "w_type dft_size f_itv input_file output_file 來執行
