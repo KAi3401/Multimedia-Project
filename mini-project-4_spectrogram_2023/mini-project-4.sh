@@ -11,7 +11,7 @@ if [ "$(ls -A $temp_dir)" ]; then
 fi
 
 echo "compiling sinegen.c"
-gcc sinegen.c -o 1
+gcc sinegen.c -o 1 -lm
 echo "done"
 
 echo -n > scp.txt #create scp.txt
@@ -42,7 +42,7 @@ echo "done"
 sleep 1
 
 echo "compiling cascade.c"
-gcc cascade.c -o 2
+gcc cascade.c -o 2 -lm
 echo "done"
 
 echo "running cascade.c scp.txt s-8kHz.wav s-16kHz.wav"
@@ -56,7 +56,7 @@ rm 1 2
 echo "done"
 
 echo "compiling spectrogram.c"
-gcc spectrogram.c -o spectrogram
+gcc spectrogram.c -o spectrogram -lm
 echo "done"
 
 echo "calculating spectrogram data and applying settings..."
