@@ -1,2 +1,2 @@
 # HI
-![測試](https://i.ibb.co/Chmm158/osu.jpg)
+<img src="https://i.ibb.co/Chmm158/osu.jpg" alt="測試" width="300" height="200">
