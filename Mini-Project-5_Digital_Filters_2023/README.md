@@ -170,8 +170,13 @@ plt.xlim(0, len(log_data)*40)
 <img src="https://i.ibb.co/GkyMx2V/h-L-impulse-Response.png" alt="h-L-impulse-Response" border="0" width="500" height="400">
 <img src="https://i.ibb.co/Ps2FFDk/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="500" height="400">
 </div>
-然後是他們對應的YL、YR log spectrum：
+然後是他們對應的YL、YR log spectrum，可以看出相對於 M = 1024的情況，YL的低平(<1500Hz)過濾效果更不好，YR的中頻(1500-3500Hz)也不如 M=1024 時的平整，整體來看過濾效果更不好：
 <div class="32_y">
 <img src="https://i.ibb.co/xYHgkch/YL-log-Spectrum.png" alt="YL-log-Spectrum" border="0" width="500" height="400">
 <img src="https://i.ibb.co/BzhzPL9/YR-log-Spectrum.png" alt="YR-log-Spectrum" border="0" width="500" height="400">
+</div>
+接著從他們的聲紋圖來看，可以看到YL的低頻有被**削弱**但是並沒有被**濾掉**；而YR的中頻也是一樣的情況：
+<div class="32_s">
+<img src="https://i.ibb.co/pLsqK85/YL-Spectrogram.png" alt="YL-Spectrogram" border="0" width="500" height="400">
+<img src="https://i.ibb.co/dJg2Qj0/YR-Spectrogram.png" alt="YR-Spectrogram" border="0" width="500" height="400">
 </div>
