@@ -19,8 +19,13 @@
     - run.sh
     - show_data.py
     - simple_filter.c
+# 程式碼內容概述
+## simple_filter.c
+<p>
+  在這個程式中，我是使用老師提供的半成品程式碼，其中提供了低通濾波器、帶通濾波器的產生函數，我稍微更改了低通濾波器使其成為高通濾波器，改法如下：
+</p>
 
-<h1>
+<div class="image">
 <img src="https://i.ibb.co/Chmm158/osu.jpg" alt="測試" width="300" height="200">
 <img src="https://i.ibb.co/0KxsVSm/OSU-10.png" alt="OSU-10" border="0" width="300" height="200">
-</h1>
+</div>
