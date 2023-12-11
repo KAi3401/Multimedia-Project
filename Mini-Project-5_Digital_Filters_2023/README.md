@@ -148,8 +148,8 @@ plt.xlim(0, len(log_data)*40)
 而impulse response就更簡單了，有幾行x就有多少，不用特別去調整。
 # 濾波結果、討論
 ## Window Size = 1024
-
+以下是左、右聲道的impulse response，可以看出是有2500個資料組成的sinc function，而右聲道的DC值更大，因為它是帶拒，會保留DC成分，相反的左聲道是帶通，所以DC值就比較小。
 <div class="1024_h">
-<img src="https://i.ibb.co/8dr4Pd4/h-L-impulse-Response.png" alt="h-L-impulse-Response" border="0" width="300" height="300>
-<img src="https://i.ibb.co/XYbFwpy/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="300" height="300>
+<img src="https://i.ibb.co/8dr4Pd4/h-L-impulse-Response.png" alt="h-L-impulse-Response" border="0" width="500" height="450">
+<img src="https://i.ibb.co/XYbFwpy/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="500" height="450">
 </div>
