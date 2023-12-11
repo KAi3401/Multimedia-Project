@@ -6,7 +6,7 @@
 #define FS 48000.0f
 #define FH 3500.0f
 #define FL 1500.0f
-#define M 4096
+#define M 4096 //最大M設為4096
 #define PI 3.141592653589793f
 
 typedef struct _wav
@@ -24,19 +24,19 @@ int wav_read_fn(char *fn, wav *p_wav)
 	short temp = 0;
 	size_t i = 0;
 
-	FILE *fp = fopen(fn, "rb");
+	FILE *fp = fopen(fn, "rb");//用2進位讀入WAV
 	if (fp == NULL)
 	{
 		fprintf(stderr, "cannot read %s\n", fn);
 		return 0;
 	}
-	fread(p_wav->header, sizeof(char), 44, fp);
+	fread(p_wav->header, sizeof(char), 44, fp);//讀header
 	while (!feof(fp))
 	{
 		fread(&temp, sizeof(short), 1, fp);
 		i++;
 	}
-	p_wav->length = i / 2;
+	p_wav->length = i / 2;//分左右聲道
 	p_wav->LChannel = (short *)calloc(p_wav->length, sizeof(short));
 	if (p_wav->LChannel == NULL)
 	{
@@ -51,8 +51,8 @@ int wav_read_fn(char *fn, wav *p_wav)
 		fclose(fp);
 		return 0;
 	}
-	fseek(fp, 44, SEEK_SET);
-	for (i = 0; i < p_wav->length; i++)
+	fseek(fp, 44, SEEK_SET);//跳過header
+	for (i = 0; i < p_wav->length; i++)//左、右聲道交互讀入
 	{
 		fread(p_wav->LChannel + i, sizeof(short), 1, fp);
 		fread(p_wav->RChannel + i, sizeof(short), 1, fp);
@@ -70,7 +70,7 @@ int wav_save_fn(char *fn, wav *p_wav)
 		fprintf(stderr, "cannot save %s\n", fn);
 		return 0;
 	}
-	fwrite(p_wav->header, sizeof(char), 44, fp);
+	fwrite(p_wav->header, sizeof(char), 44, fp);//寫header 內容沒變
 	for (i = 0; i < p_wav->length; i++)
 	{
 		fwrite(p_wav->LChannel + i, sizeof(short), 1, fp);
@@ -148,6 +148,7 @@ float band_pass(int m, int n)
 		return 2.0 * (sinf(wh * ((float)(n - m))) - sinf(wl * ((float)(n - m)))) / PI / ((float)(n - m)) * hamming(2 * m + 1, n);
 	}
 }
+//宣告cos、sin表格
 double cos_values[1200] = {0};
 double sin_values[1200] = {0};
 void DFT(wav wavout, char *fn_YL, char *fn_YR)
@@ -161,9 +162,9 @@ void DFT(wav wavout, char *fn_YL, char *fn_YR)
 	FILE *YR = fopen(fn_YR, "w");
 	for (int k = 0; k < 600; k++)
 	{
-		double real1 = 0.0;
+		double real1 = 0.0;//LChannel
 		double imag1 = 0.0;
-		double real2 = 0.0;
+		double real2 = 0.0;//RChannel
 		double imag2 = 0.0;
 
 		for (int n = 0; n < 1200; n++)
