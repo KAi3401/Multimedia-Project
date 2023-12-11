@@ -158,3 +158,8 @@ plt.xlim(0, len(log_data)*40)
 <img src="https://i.ibb.co/n0Q9cxy/YL-log-Spectrum.png" alt="YL-log-Spectrum" border="0" width="500" height="400">
 <img src="https://i.ibb.co/jyF9Msc/YR-log-Spectrum.png" alt="YR-log-Spectrum" border="0" width="500" height="400">
 </div>
+然後讓我們畫出那0.025秒的聲紋圖，我一樣是有增強明暗對比，所以低頻成分有沒有被濾掉就很明顯，結果如下，可以看到YL的低頻(<1500Hz)相對於YR被濾了大部分，而YR的中頻(1500-3500Hz)相對於YL也被濾了大部分，並且高頻也有更多訊號(不明顯)，因此可以驗證我們的impulse response、log spectrum是正確的：
+<div class="1024_s">
+<img src="https://i.ibb.co/6NnvzCs/YL-Spectrogram.png" alt="YL-Spectrogram" border="0" width="500" height="400"> 
+<img src="https://i.ibb.co/sqT17vp/YR-Spectrogram.png" alt="YR-Spectrogram" border="0" width="500" height="400">
+</div>
