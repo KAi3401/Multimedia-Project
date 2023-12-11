@@ -56,20 +56,20 @@ if(mod=='1'): #spectrogram
 
 elif(mod=='2'):   #log spectrum
     with open(file_name, 'r') as file:
-        impulse_response = [float(line.strip()) for line in file]
+        log_data = [float(line.strip()) for line in file]
 
     # 生成x軸數據
-    x = range(0,len(impulse_response)*40,40)
+    x = range(0,len(log_data)*40,40)
 
     # 繪製stem圖
-    plt.stem(x, impulse_response, basefmt='b',linefmt=".-",markerfmt=" ")
+    plt.stem(x, log_data, basefmt='b',linefmt=".-",markerfmt=" ")
 
     # 添加標題和標籤
     file_title = file_name.split('.')[0]
     plt.title(file_title + '-log spectrum')
     plt.xlabel('Frequency (Hz)')
-    plt.xlim(0, len(impulse_response)*40)
-    plt.ylim(min(impulse_response) ,max(impulse_response) + 10)
+    plt.xlim(0, len(log_data)*40)
+    plt.ylim(min(log_data) ,max(log_data) + 10)
     plt.ylabel('Amplitude (dB)')
     save_path = file_title + '_logSpectrum.png'
     plt.savefig(save_path, dpi=1200)
