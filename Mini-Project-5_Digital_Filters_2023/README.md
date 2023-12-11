@@ -180,3 +180,6 @@ plt.xlim(0, len(log_data)*40)
 <img src="https://i.ibb.co/pLsqK85/YL-Spectrogram.png" alt="YL-Spectrogram" border="0" width="500" height="400">
 <img src="https://i.ibb.co/dJg2Qj0/YR-Spectrogram.png" alt="YR-Spectrogram" border="0" width="500" height="400">
 </div>
+	
+## Window Size = 8
+最後是Window Size = 8 的情況，
