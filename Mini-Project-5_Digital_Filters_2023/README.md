@@ -103,9 +103,18 @@ void DFT(wav wavout, char *fn_YL, char *fn_YR)
 ## show_data.py
 執行方法為 python3 show_data.py [filename] [mode]，其中filename為txt檔的資料，而mode為繪製不同圖形所設，設定如下：
 ```
-mode = 1 : draw spectrogram
+mode = 1 : draw spectrogram (額外產生的，拿來驗證濾波的成效)
 mode = 2 : draw log spectrum
 mode = 3 : draw impulse response
+```
+以Window_size=1024為例，我就會繪製以下6張圖片：
+```sh
+python3 show_data.py YL.txt 1
+python3 show_data.py YL.txt 2
+python3 show_data.py YR.txt 1
+python3 show_data.py YR.txt 2
+python3 show_data.py hL.txt 3
+python3 show_data.py hR.txt 3
 ```
 <div class="image">
 <img src="https://i.ibb.co/Chmm158/osu.jpg" alt="測試" width="300" height="200">
