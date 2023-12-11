@@ -163,3 +163,10 @@ plt.xlim(0, len(log_data)*40)
 <img src="https://i.ibb.co/6NnvzCs/YL-Spectrogram.png" alt="YL-Spectrogram" border="0" width="500" height="400"> 
 <img src="https://i.ibb.co/sqT17vp/YR-Spectrogram.png" alt="YR-Spectrogram" border="0" width="500" height="400">
 </div>
+	
+## Window Size = 32
+接下來是Window size = 32 的左、右聲道的impulse response，因為 size變小了，sinc圖形也更加簡化，但是一樣可以看出和 M = 1024 時一樣的特點：
+<div class="32_h">
+<img src="https://i.ibb.co/GkyMx2V/h-L-impulse-Response.png" alt="h-L-impulse-Response" border="0" width="500" height="400">
+<img src="https://i.ibb.co/Ps2FFDk/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="500" height="400">
+</div>
