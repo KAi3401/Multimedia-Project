@@ -153,3 +153,8 @@ plt.xlim(0, len(log_data)*40)
 <img src="https://i.ibb.co/8dr4Pd4/h-L-impulse-Response.png" alt="h-L-impulse-Response" border="0" width="500" height="450">
 <img src="https://i.ibb.co/XYbFwpy/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="500" height="450">
 </div>
+然後對應所產生的YL、YR spectrum如下：
+<div class="1024_y">
+<img src="https://i.ibb.co/n0Q9cxy/YL-log-Spectrum.png" alt="YL-log-Spectrum" border="0" width="500" height="450">
+<img src="https://i.ibb.co/jyF9Msc/YR-log-Spectrum.png" alt="YR-log-Spectrum" border="0" width="500" height="450">
+</div>
