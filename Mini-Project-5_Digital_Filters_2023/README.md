@@ -149,7 +149,7 @@ plt.xlim(0, len(log_data)*40)
 # 濾波結果、討論
 ## Window Size = 1024
 
-<div class="image">
-<img src="https://i.ibb.co/Chmm158/osu.jpg" alt="測試" width="300" height="200">
-<img src="https://i.ibb.co/0KxsVSm/OSU-10.png" alt="OSU-10" border="0" width="300" height="200">
+<div class="1024_h">
+<img src="https://i.ibb.co/8dr4Pd4/h-L-impulse-Response.png" alt="h-L-impulse-Response" border="0" width="300" height="300>
+<img src="https://i.ibb.co/XYbFwpy/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="300" height="300>
 </div>
