@@ -21,10 +21,92 @@
     - simple_filter.c
 # 程式碼內容概述
 ## simple_filter.c
-<p>
-  在這個程式中，我是使用老師提供的半成品程式碼，其中提供了低通濾波器、帶通濾波器的產生函數，我稍微更改了低通濾波器使其成為高通濾波器，改法如下：
-</p>
+執行方法為simple_filter M hL.txt hR.txt YL.txt YR.txt blue_giant_fragment.wav out.wav，後面的檔名目前在run.sh中是寫死的，更改的話會導致無法把產生的檔案移到特定資料夾。  
+在這個程式中，我是使用老師提供的半成品程式碼，其中提供了低通濾波器、帶通濾波器的產生函數，我稍微更改了低通濾波器使其成為高通濾波器，改法如下：
+```c
+float high_pass(int m, int n)
+{
+	float wc = 2 * PI * FH / FS;
+	if (n == m)
+	{ // L'Hopital's Rule
+		return 1 - wc / PI;
+	}
+	else
+	{
+		return -sinf(wc * ((float)(n - m))) / PI / ((float)(n - m)) * hamming(2 * m + 1, n);
+	}
+}
+```
+接著我就可以使用高通濾波器(過濾掉3500Hz以下) + 低通濾波器(過濾掉1500Hz以上) 來產生Bandstop濾波器：
+```c
+	for (n = 0; n < (2 * m + 1); n++)
+	{
+		h_L[n] = band_pass(m, n);
+		h_R[n] = low_pass(m, n) + high_pass(m, n); //bandstop
+	}
+```
+接著就將產生的h_R、h_L寫入txt檔案，型態為%e，並且一行一個數字。  
+然後會把wavout.LChannel[n]、wavout.RChannel[n]第20.060~20.085秒的資料抓出來，並且套用Hamming Window後去做DFT，然後將log後的結果存入YL.txt、YR.txt，一樣型態為%e，一行一個資料：  
+```c
+void DFT(wav wavout, char *fn_YL, char *fn_YR)
+{
 
+	// 1200 samples = 0.025s
+	// 20.06s = 1200 * (20.06/0.025) = 962880
+	double sum1;
+	double sum2;
+	FILE *YL = fopen(fn_YL, "w");
+	FILE *YR = fopen(fn_YR, "w");
+	for (int k = 0; k < 600; k++)
+	{
+		double real1 = 0.0;
+		double imag1 = 0.0;
+		double real2 = 0.0;
+		double imag2 = 0.0;
+
+		for (int n = 0; n < 1200; n++)
+		{
+			int freq = (n * k) % 1200;
+			// 使用查表，避免重複計算
+			real1 += wavout.LChannel[962880 + n] * cos_values[freq] * hamming(1199,n);
+			imag1 -= wavout.LChannel[962880 + n] * sin_values[freq] * hamming(1199,n);
+			real2 += wavout.RChannel[962880 + n] * cos_values[freq] * hamming(1199,n);
+			imag2 -= wavout.RChannel[962880 + n] * sin_values[freq] * hamming(1199,n);
+		}
+
+		sum1 = sqrt(real1 * real1 + imag1 * imag1);
+		sum2 = sqrt(real2 * real2 + imag2 * imag2);
+		if (sum1 < 1)
+		{
+			fprintf(YL, "0");
+		}
+		else
+		{
+			fprintf(YL, "%e", 20 * fabs(log10(sum1)));
+		}
+		if (sum2 < 1)
+		{
+			fprintf(YR, "0");
+		}
+		else
+		{
+			fprintf(YR, "%e", 20 * fabs(log10(sum2)));
+		}
+		if (k != 599)
+		{
+			fprintf(YL, "\n");
+			fprintf(YR, "\n");
+		}
+	}
+}
+```
+## show_data.py
+執行方法為 python3 show_data.py [filename] [mode]，其中filename為txt檔的資料，而mode為繪製不同圖形所設，設定如下：
+```
+mode = 1 : draw spectrogram
+mode = 2 : draw log spectrum
+mode = 3 : draw impulse response
+```
 <div class="image">
 <img src="https://i.ibb.co/Chmm158/osu.jpg" alt="測試" width="300" height="200">
 <img src="https://i.ibb.co/0KxsVSm/OSU-10.png" alt="OSU-10" border="0" width="300" height="200">
