@@ -175,7 +175,7 @@ plt.xlim(0, len(log_data)*40)
 <img src="https://i.ibb.co/xYHgkch/YL-log-Spectrum.png" alt="YL-log-Spectrum" border="0" width="500" height="400">
 <img src="https://i.ibb.co/BzhzPL9/YR-log-Spectrum.png" alt="YR-log-Spectrum" border="0" width="500" height="400">
 </div>
-接著從他們的聲紋圖來看，可以看到YL的低頻有被**削弱**但是並沒有被**濾掉**；而YR的中頻也是一樣的情況：
+接著從他們的聲紋圖來看，可以看到YL的低頻有被**削弱**但是並沒有被**濾掉**；而YR的中頻也是一樣的情況，但是中頻強度本來就沒有低頻強，因此看起來還可以：
 <div class="32_s">
 <img src="https://i.ibb.co/pLsqK85/YL-Spectrogram.png" alt="YL-Spectrogram" border="0" width="500" height="400">
 <img src="https://i.ibb.co/dJg2Qj0/YR-Spectrogram.png" alt="YR-Spectrogram" border="0" width="500" height="400">
