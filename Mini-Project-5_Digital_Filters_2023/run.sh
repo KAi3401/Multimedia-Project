@@ -33,7 +33,7 @@ mv "YL_logSpectrum.png" "results_1024/"
 mv "YR_logSpectrum.png" "results_1024/"
 mv "YL_Spectrogram.png" "results_1024/"
 mv "YR_Spectrogram.png" "results_1024/"
-
+mv "out.wav" "results_1024/"
 echo "M = 1024 Done"
 
 # excuting filter.c with windows sizer = 32
@@ -64,7 +64,7 @@ mv "YL_logSpectrum.png" "results_32/"
 mv "YR_logSpectrum.png" "results_32/"
 mv "YL_Spectrogram.png" "results_32/"
 mv "YR_Spectrogram.png" "results_32/"
-
+mv "out.wav" "results_32/"
 echo "M = 32 Done"
 
 # excuting filter.c with windows sizer = 8
@@ -95,7 +95,7 @@ mv "YL_logSpectrum.png" "results_8/"
 mv "YR_logSpectrum.png" "results_8/"
 mv "YL_Spectrogram.png" "results_8/"
 mv "YR_Spectrogram.png" "results_8/"
-
+mv "out.wav" "results_8/"
 echo "M = 8 Done"
 
 sleep 1
