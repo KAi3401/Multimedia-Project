@@ -233,7 +233,7 @@ int main(int argc, char **argv)
 	}
 	FILE *hL = fopen(fn_hL, "w");
 	FILE *hR = fopen(fn_hR, "w");
-
+	//write h_L[n]、h_R[n] to file
 	for (n = 0; n < (2 * m + 1); n++)
 	{
 		fprintf(hL, "%e", h_L[n]);
