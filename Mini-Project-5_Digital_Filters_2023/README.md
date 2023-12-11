@@ -8,7 +8,7 @@
   - simple_filter.c會使用**gcc**來compile。
   - 請確保python有安裝**numpy**和**matplotlib**。
 # 程式執行預期結果
-  - 執行完run.sh，並顯示**ALL done!!**後，資料夾內應該會出現以下檔案、資料夾：
+  - 執行完run.sh，並顯示**ALL done**!!後，資料夾內應該會出現以下檔案、資料夾：
     - results_8
     - results_32
     - results_1024
