@@ -188,7 +188,12 @@ plt.xlim(0, len(log_data)*40)
 <img src="https://i.ibb.co/4TFydMw/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="500" height="400">
 </div>
 以及它們對應的YL、YR log spectrum，可以看出兩個圖基本長得差不多，也就是幾乎沒有濾掉任何資訊，又或者濾的效果極差，相對 M = 32 就可以比較出差異了：
-<div class="32_y">
+<div class="8_y">
 <img src="https://i.ibb.co/MRqCsHK/YL-log-Spectrum.png" alt="YL-log-Spectrum" border="0" width="500" height="400">
 <img src="https://i.ibb.co/Qk2dRJ9/YR-log-Spectrum.png" alt="YR-log-Spectrum" border="0" width="500" height="400">
+</div>
+最後再來查看它們對應的聲紋圖，結果就很明顯了，幾乎沒有帶通、帶拒的效果：
+<div class="8_s">
+<img src="https://i.ibb.co/4NL2tdZ/YL-Spectrogram.png" alt="YL-Spectrogram" border="0" width="500" height="400">
+<img src="https://i.ibb.co/M8wT2R9/YR-Spectrogram.png" alt="YR-Spectrogram" border="0" width="500" height="400">
 </div>
