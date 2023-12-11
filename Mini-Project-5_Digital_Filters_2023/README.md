@@ -197,3 +197,14 @@ plt.xlim(0, len(log_data)*40)
 <img src="https://i.ibb.co/4NL2tdZ/YL-Spectrogram.png" alt="YL-Spectrogram" border="0" width="500" height="400">
 <img src="https://i.ibb.co/M8wT2R9/YR-Spectrogram.png" alt="YR-Spectrogram" border="0" width="500" height="400">
 </div>
+
+## Output.wav
+最後我們用Ocenaudio來查看濾波結果產生的wav檔案，可以看出不同Window Size所產生的效果，和上面說明得差不多，也應證了Window Size越小，過濾效果越差：
+### M = 1024
+<img src="https://i.ibb.co/X7sHtLj/M-1024.png" alt="M-1024" border="0">
+
+### M = 32
+<img src="https://i.ibb.co/4Y2Ntwb/M-32.png" alt="M-32" border="0">
+
+### M = 8
+<img src="https://i.ibb.co/QCnKH5k/M-8.png" alt="M-8" border="0">
