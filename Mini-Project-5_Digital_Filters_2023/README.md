@@ -199,7 +199,7 @@ plt.xlim(0, len(log_data)*40)
 </div>
 
 ## Output.wav
-最後我們用Ocenaudio來查看濾波結果產生的wav檔案，可以看出不同Window Size所產生的效果，和上面說明得差不多，也應證了Window Size越小，過濾效果越差：
+最後我們用Ocenaudio來查看濾波結果產生的wav檔案，可以看出不同Window Size所產生的效果，和上面說明的結果差不多，也應證了Window Size越小，過濾效果越差：
 ### M = 1024
 <img src="https://i.ibb.co/X7sHtLj/M-1024.png" alt="M-1024" border="0">
 
