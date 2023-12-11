@@ -121,28 +121,28 @@ python3 show_data.py hR.txt 3
 ```python
 elif(mod=='2'):   #log spectrum
     with open(file_name, 'r') as file:
-        impulse_response = [float(line.strip()) for line in file]
+        log_data = [float(line.strip()) for line in file]
 
     # 生成x軸數據
-    x = range(0,len(impulse_response)*40,40)
+    x = range(0,len(log_data)*40,40)
 
     # 繪製stem圖
-    plt.stem(x, impulse_response, basefmt='b',linefmt=".-",markerfmt=" ")
+    plt.stem(x, log_data, basefmt='b',linefmt=".-",markerfmt=" ")
 
     # 添加標題和標籤
     file_title = file_name.split('.')[0]
     plt.title(file_title + '-log spectrum')
     plt.xlabel('Frequency (Hz)')
-    plt.xlim(0, len(impulse_response)*40)
-    plt.ylim(min(impulse_response) ,max(impulse_response) + 10)
+    plt.xlim(0, len(log_data)*40)
+    plt.ylim(min(log_data) ,max(log_data) + 10)
     plt.ylabel('Amplitude (dB)')
     save_path = file_title + '_logSpectrum.png'
     plt.savefig(save_path, dpi=1200)
 ```
 其中
 ```python
-x = range(0,len(impulse_response)*40,40)
-plt.xlim(0, len(impulse_response)*40)
+x = range(0,len(log_data)*40,40)
+plt.xlim(0, len(log_data)*40)
 ```
 是因為我拿1200個資料下去做DFT，會產生600個結果 (剩下600-1200個資料是對稱的，所以只存前600)，然後我要將x軸顯示0-24000Hz，所以用這每個40個放一次資料的方法來實現。  
 而impulse response就更簡單了，有幾行x就有多少，不用特別去調整。
