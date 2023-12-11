@@ -182,4 +182,13 @@ plt.xlim(0, len(log_data)*40)
 </div>
 	
 ## Window Size = 8
-最後是Window Size = 8 的情況，
+最後是Window Size = 8 的情況，以下是左、右聲道的impulse response，可以看出來資料量更少，圖形更簡化，到時候濾波的效果應該會更差：
+<div class="8_h">
+<img src="https://i.ibb.co/MDB4FcN/h-L-impulse-Response.png" alt="h-L-impulse-Response" border="0" width="500" height="400">
+<img src="https://i.ibb.co/4TFydMw/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="500" height="400">
+</div>
+以及它們對應的YL、YR log spectrum，可以看出兩個圖基本長得差不多，也就是幾乎沒有濾掉任何資訊，又或者濾的效果極差，相對 M = 32 就可以比較出差異了：
+<div class="32_y">
+<img src="https://i.ibb.co/MRqCsHK/YL-log-Spectrum.png" alt="YL-log-Spectrum" border="0" width="500" height="400">
+<img src="https://i.ibb.co/Qk2dRJ9/YR-log-Spectrum.png" alt="YR-log-Spectrum" border="0" width="500" height="400">
+</div>
