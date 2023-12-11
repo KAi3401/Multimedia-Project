@@ -150,11 +150,11 @@ plt.xlim(0, len(log_data)*40)
 ## Window Size = 1024
 以下是左、右聲道的impulse response，可以看出是有2500個資料組成的sinc function，而右聲道的DC值更大，因為它是帶拒，會保留DC成分，相反的左聲道是帶通，所以DC值就比較小。
 <div class="1024_h">
-<img src="https://i.ibb.co/8dr4Pd4/h-L-impulse-Response.png" alt="h-L-impulse-Response" border="0" width="500" height="450">
-<img src="https://i.ibb.co/XYbFwpy/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="500" height="450">
+<img src="https://i.ibb.co/8dr4Pd4/h-L-impulse-Response.png" alt="h-L-impulse-Response" border="0" width="500" height="400">
+<img src="https://i.ibb.co/XYbFwpy/h-R-impulse-Response.png" alt="h-R-impulse-Response" border="0" width="500" height="400">
 </div>
-然後對應所產生的YL、YR spectrum如下：
+然後對應所產生的YL、YR spectrum如下，可以看到YL 1500Hz以下被壓低了，1500-3500Hz相對於YR更加明顯，而YR 1500-3500Hz有明顯被壓低的樣子，並且>3500Hz的地方也都比YL還大，可以看出大致有帶通、帶拒的效果，只是沒有濾得很乾淨：
 <div class="1024_y">
-<img src="https://i.ibb.co/n0Q9cxy/YL-log-Spectrum.png" alt="YL-log-Spectrum" border="0" width="500" height="450">
-<img src="https://i.ibb.co/jyF9Msc/YR-log-Spectrum.png" alt="YR-log-Spectrum" border="0" width="500" height="450">
+<img src="https://i.ibb.co/n0Q9cxy/YL-log-Spectrum.png" alt="YL-log-Spectrum" border="0" width="500" height="400">
+<img src="https://i.ibb.co/jyF9Msc/YR-log-Spectrum.png" alt="YR-log-Spectrum" border="0" width="500" height="400">
 </div>
