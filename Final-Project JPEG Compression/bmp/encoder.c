@@ -41,7 +41,7 @@ typedef struct YCbCr // 只能用float
     float Cb;
     float Cr;
 } ImgYCbCr;
-typedef struct QT_YCbCr 
+typedef struct QT_YCbCr
 {
     int16_t Y;
     int16_t Cb;
@@ -395,7 +395,7 @@ void DCT(ImgYCbCr **Data_YCbCr, ImgYCbCr **DCT_Result, int curr_row, int curr_co
         }
     }
 }
-void Quantize(ImgYCbCr **DCT_Result, ImgQT_YCbCr **QT_result, int curr_row, int curr_col)
+void Quantize(ImgYCbCr **DCT_Result, ImgQT_YCbCr **QT_result, ImgYCbCr **QT_err, int curr_row, int curr_col)
 {
     int i, j;
     // Y 用 Y的量化表
@@ -404,6 +404,7 @@ void Quantize(ImgYCbCr **DCT_Result, ImgQT_YCbCr **QT_result, int curr_row, int 
         for (j = 0; j < 8; j++)
         {
             QT_result[i + curr_row * 8][j + curr_col * 8].Y = round(DCT_Result[i + curr_row * 8][j + curr_col * 8].Y / YTable[i * 8 + j]);
+            QT_err[i + curr_row * 8][j + curr_col * 8].Y = DCT_Result[i + curr_row * 8][j + curr_col * 8].Y - QT_result[i + curr_row * 8][j + curr_col * 8].Y * YTable[i * 8 + j];
         }
     }
     // Cb Cr 用另一張表
@@ -413,6 +414,8 @@ void Quantize(ImgYCbCr **DCT_Result, ImgQT_YCbCr **QT_result, int curr_row, int 
         {
             QT_result[i + curr_row * 8][j + curr_col * 8].Cb = round(DCT_Result[i + curr_row * 8][j + curr_col * 8].Cb / CbCrTable[i * 8 + j]);
             QT_result[i + curr_row * 8][j + curr_col * 8].Cr = round(DCT_Result[i + curr_row * 8][j + curr_col * 8].Cr / CbCrTable[i * 8 + j]);
+            QT_err[i + curr_row * 8][j + curr_col * 8].Cb = DCT_Result[i + curr_row * 8][j + curr_col * 8].Cb - QT_result[i + curr_row * 8][j + curr_col * 8].Cb * CbCrTable[i * 8 + j];
+            QT_err[i + curr_row * 8][j + curr_col * 8].Cr = DCT_Result[i + curr_row * 8][j + curr_col * 8].Cr - QT_result[i + curr_row * 8][j + curr_col * 8].Cr * CbCrTable[i * 8 + j];
         }
     }
 }
@@ -468,7 +471,7 @@ void saveQuantizationError(char *filename, ImgYCbCr **error, int H, int W, char 
     }
     fclose(fp);
 }
-
+// read data -> Padding -> RGB2YCbCr -> 2D DCT -> Quantization -> calculate error -> output
 void encoder1(char *fn_bmp, char *fn_Qt_Y, char *fn_Qt_Cb, char *fn_Qt_Cr, char *fn_dim, char *fn_qF_Y, char *fn_qF_Cb, char *fn_qF_Cr, char *fn_eF_Y, char *fn_eF_Cb, char *fn_eF_Cr)
 {
     int i, j;
@@ -518,7 +521,7 @@ void encoder1(char *fn_bmp, char *fn_Qt_Y, char *fn_Qt_Cb, char *fn_Qt_Cr, char 
     ImgYCbCr **Data_YCbCr = YCBCRmalloc_2D(newH, newW);
     ImgYCbCr **Data_dctResult = YCBCRmalloc_2D(newH, newW);
     ImgQT_YCbCr **Data_qtResult = QTmalloc_2D(newH, newW);
-    
+    ImgYCbCr **QT_err = YCBCRmalloc_2D(newH, newW);
     RGBtoYCbCr(Padded_Data_RGB, Data_YCbCr, newH, newW);
     // new 的 H、W 都是保證能被8整除的
 
@@ -533,25 +536,18 @@ void encoder1(char *fn_bmp, char *fn_Qt_Y, char *fn_Qt_Cb, char *fn_Qt_Cr, char 
     }
     printf("Now Quantize the result...\n");
     // Quantize
+
     for (int row = 0; row < block_H; row++)
     {
         for (int col = 0; col < block_W; col++)
         {
-            Quantize(Data_dctResult, Data_qtResult, row, col);
+            Quantize(Data_dctResult, Data_qtResult,QT_err, row, col);
         }
     }
     printf("Now Calculte the Quantization Error...\n");
     // Calculate Quantization Error
-    ImgYCbCr **QT_err = YCBCRmalloc_2D(newH, newW);
-    for (int i = 0; i < newH; i++)
-    {
-        for (int j = 0; j < newW; j++)
-        {
-            QT_err[i][j].Y  = Data_qtResult[i][j].Y  - Data_dctResult[i][j].Y;
-            QT_err[i][j].Cb = Data_qtResult[i][j].Cb - Data_dctResult[i][j].Cb;
-            QT_err[i][j].Cr = Data_qtResult[i][j].Cr - Data_dctResult[i][j].Cr;
-        }
-    }
+    
+
 
     printf("Now Saving all the result...\n");
     // 寫入檔案
@@ -562,7 +558,7 @@ void encoder1(char *fn_bmp, char *fn_Qt_Y, char *fn_Qt_Cb, char *fn_Qt_Cr, char 
 
     // 保存尺寸
     FILE *fp_dim = fopen(fn_dim, "w");
-    fprintf(fp_dim, "%d %d", newW, newH);
+    fprintf(fp_dim, "%d %d %d %d", W, H, newW, newH);
     fclose(fp_dim);
 
     // 保存量化後的值
@@ -574,9 +570,11 @@ void encoder1(char *fn_bmp, char *fn_Qt_Y, char *fn_Qt_Cb, char *fn_Qt_Cr, char 
     saveQuantizationError(fn_eF_Y, QT_err, newH, newW, /* channel */ "Y");
     saveQuantizationError(fn_eF_Cb, QT_err, newH, newW, /* channel */ "Cb");
     saveQuantizationError(fn_eF_Cr, QT_err, newH, newW, /* channel */ "Cr");
-    for(int i = 0; i <8; i++){
-        for(int j = 0; j <8; j++){
-            printf("%f ",Data_YCbCr[i][j].Y);
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            printf("%d ", Data_qtResult[i][j].Cr);
         }
         printf("\n");
     }
@@ -598,8 +596,6 @@ void encoder1(char *fn_bmp, char *fn_Qt_Y, char *fn_Qt_Cb, char *fn_Qt_Cr, char 
     fclose(fp_in);
 
     printf("Job done!\n");
-
-
 }
 
 int main(int argc, char **argv)
