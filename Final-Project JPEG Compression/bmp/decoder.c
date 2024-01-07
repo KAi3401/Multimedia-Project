@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <string.h>
-float PI = 3.14159265359;
+float PI = 3.14159265358979323846;
 
 /* Construct a structure of BMP header */
 typedef struct Bmpheader
@@ -145,12 +145,12 @@ void write_header(Bitmap *bmpheader, int width, int height)
     bmpheader->planes = 1;
     bmpheader->bits_perpixel = 24;
     bmpheader->compression = 0;
-    bmpheader->bitmap_datasize = 0; //  width * height * 3 or 0  沒什麼差
-    bmpheader->hresolution = 3780;  // 像素/米
-    bmpheader->vresolution = 3780;  // 像素/米
+    bmpheader->bitmap_datasize = width * height * 3; //  width * height * 3 or 0  沒什麼差
+    bmpheader->hresolution = 2835;                   // 像素/米
+    bmpheader->vresolution = 2835;                   // 像素/米
     bmpheader->usedcolors = 0;
     bmpheader->importantcolors = 0;
-    bmpheader->palette = 11420596; // 隨便一個數字 反正bmp用不到
+    bmpheader->palette = 13; // 隨便一個數字 反正bmp用不到
 }
 
 void output_bmpRGB(ImgRGB **RGB, FILE *outfile, Bitmap bmpheader, int skip)
@@ -183,15 +183,11 @@ void output_bmpRGB(ImgRGB **RGB, FILE *outfile, Bitmap bmpheader, int skip)
             fwrite(&RGB[x][y].B, sizeof(uint8_t), 1, outfile);
             fwrite(&RGB[x][y].G, sizeof(uint8_t), 1, outfile);
             fwrite(&RGB[x][y].R, sizeof(uint8_t), 1, outfile);
-            if (x < 9 && y < 8)
-                printf("%02x%02x%02x ", RGB[x][y].R, RGB[x][y].G, RGB[x][y].B); // DEBUG
         }
         if (skip != 0)
         {
             fwrite(skip_buf, skip, 1, outfile);
         }
-        if (x < 9)
-            printf("\n"); // DEBUG
     }
 }
 void RGBtoYCbCr(ImgRGB **RGB, ImgYCbCr **YCbCr, int H, int W)
@@ -299,7 +295,7 @@ void decoder0(char *fn_bmp, char *fn_R, char *fn_G, char *fn_B, char *fn_dim)
     fclose(fp_dim);
     printf("Job done!\n");
 }
-uint8_t YTable[64] = {
+int YTable[64] = {
     16, 11, 10, 16, 24, 40, 51, 61,
     12, 12, 14, 19, 26, 58, 60, 55,
     14, 13, 16, 24, 40, 57, 69, 56,
@@ -308,7 +304,7 @@ uint8_t YTable[64] = {
     24, 35, 55, 64, 81, 104, 113, 92,
     49, 64, 78, 87, 103, 121, 120, 101,
     72, 92, 95, 98, 112, 100, 103, 99};
-uint8_t CbCrTable[64] = {
+int CbCrTable[64] = {
     17, 18, 24, 47, 99, 99, 99, 99,
     18, 21, 26, 66, 99, 99, 99, 99,
     24, 26, 56, 99, 99, 99, 99, 99,
@@ -404,6 +400,21 @@ void inverse_DCT(ImgYCbCr **DCT_result, ImgYCbCr **reconstruct_YCbCr, int curr_r
 {
     int i, j, u, v;
     double sumY, sumCb, sumCr, cu, cv;
+    double cos_table[8][8][8][8];
+    // 先建表
+    for (int u = 0; u < 8; u++)
+    {
+        for (int v = 0; v < 8; v++)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    cos_table[u][v][i][j] = cos((2 * i + 1) * u * PI / (2 * 8)) * cos((2 * j + 1) * v * PI / (2 * 8));
+                }
+            }
+        }
+    }
 
     for (i = 0; i < 8; i++)
     {
@@ -418,17 +429,11 @@ void inverse_DCT(ImgYCbCr **DCT_result, ImgYCbCr **reconstruct_YCbCr, int curr_r
                     cu = (u == 0) ? 1.0 / sqrt(2) : 1.0;
                     cv = (v == 0) ? 1.0 / sqrt(2) : 1.0;
 
-                    sumY += cu * cv * DCT_result[u + curr_row * 8][v + curr_col * 8].Y *
-                            cos((2 * i + 1) * u * PI / (2 * 8)) *
-                            cos((2 * j + 1) * v * PI / (2 * 8));
+                    sumY += cu * cv * DCT_result[u + curr_row * 8][v + curr_col * 8].Y * cos_table[u][v][i][j];
 
-                    sumCb += cu * cv * DCT_result[u + curr_row * 8][v + curr_col * 8].Cb *
-                             cos((2 * i + 1) * u * PI / (2 * 8)) *
-                             cos((2 * j + 1) * v * PI / (2 * 8));
+                    sumCb += cu * cv * DCT_result[u + curr_row * 8][v + curr_col * 8].Cb * cos_table[u][v][i][j];
 
-                    sumCr += cu * cv * DCT_result[u + curr_row * 8][v + curr_col * 8].Cr *
-                             cos((2 * i + 1) * u * PI / (2 * 8)) *
-                             cos((2 * j + 1) * v * PI / (2 * 8));
+                    sumCr += cu * cv * DCT_result[u + curr_row * 8][v + curr_col * 8].Cr * cos_table[u][v][i][j];
                 }
             }
 
@@ -491,43 +496,96 @@ void decoder1(char *fn_bmp, char *fn_Qt_Y, char *fn_Qt_Cb, char *fn_Qt_Cr, char 
     ImgQT_YCbCr **qF_Data = QTmalloc_2D(NewH, NewW);
     readQuantizedData(fn_qF_Y, fn_qF_Cb, fn_qF_Cr, qF_Data, NewW, NewH);
 
-    // read fn_eF_Y, fn_eF_Cb, fn_eF_Cr
+    // read fn_eF_Y, fn_eF_Cb, fn_eF_Cr                /// QT_err 是表示正確讀入的err   而QT_err2代表沒有讀入err
     ImgYCbCr **QT_err = YCBCRmalloc_2D(NewH, NewW);
     readError(fn_eF_Y, fn_eF_Cb, fn_eF_Cr, QT_err, NewW, NewH);
 
+    ImgYCbCr **QT_err2 = YCBCRmalloc_2D(NewH, NewW);
+    for (int i = 0; i < NewH; i++)
+    {
+        for (int j = 0; j < NewW; j++)
+        {
+            QT_err2[i][j].Y = 0.0;
+            QT_err2[i][j].Cb = 0.0;
+            QT_err2[i][j].Cr = 0.0;
+        }
+    }
+
     // inverse Quantization
     ImgYCbCr **DCT_result = YCBCRmalloc_2D(NewH, NewW);
+    ImgYCbCr **DCT_result2 = YCBCRmalloc_2D(NewH, NewW);
     for (int row = 0; row < block_H; row++)
     {
         for (int col = 0; col < block_W; col++)
         {
             inverse_QT(qF_Data, QT_err, DCT_result, read_YTable, read_CbCrTable, row, col);
+            inverse_QT(qF_Data, QT_err2, DCT_result2, read_YTable, read_CbCrTable, row, col);
         }
     }
 
     // inverse 2D DCT
     ImgYCbCr **reconstruct_YCbCr = YCBCRmalloc_2D(NewH, NewW);
+    ImgYCbCr **reconstruct_YCbCr2 = YCBCRmalloc_2D(NewH, NewW);
     for (int row = 0; row < block_H; row++)
     {
         for (int col = 0; col < block_W; col++)
         {
             inverse_DCT(DCT_result, reconstruct_YCbCr, row, col);
+            inverse_DCT(DCT_result2, reconstruct_YCbCr2, row, col);
         }
-    }
-    for (int i = 0; i < 8; i++)
-    {
-        for (int j = 0; j < 8; j++)
-        {
-            printf("%f ", QT_err[i][j].Y);
-        }
-        printf("\n");
     }
 
     // YCbCr to RGB
     ImgRGB **reconstruct_RGB = malloc_2D(H, W);
+    ImgRGB **reconstruct_RGB2 = malloc_2D(H, W);
     YCbCrtoRGB(reconstruct_YCbCr, reconstruct_RGB, H, W);
-    output_bmpRGB(reconstruct_RGB, fp_out, bmpheader, skip);
+    YCbCrtoRGB(reconstruct_YCbCr2, reconstruct_RGB2, H, W);
+    
 
+    // 計算total SQNR     透過 reconstruct_RGB 、 reconstruct_RGB2 比較
+    double R_SQNR;
+    double G_SQNR;
+    double B_SQNR;
+    int64_t R_sum_signal = 0, R_sum_noise = 0;
+    int64_t G_sum_signal = 0, G_sum_noise = 0;
+    int64_t B_sum_signal = 0, B_sum_noise = 0;
+
+    for (int i = 0; i < H; i++)
+    {
+        for (int j = 0; j < W; j++)
+        {
+            // Calculate the square of the original values for each channel
+            R_sum_signal += reconstruct_RGB2[i][j].R * reconstruct_RGB2[i][j].R;
+            G_sum_signal += reconstruct_RGB2[i][j].G * reconstruct_RGB2[i][j].G;
+            B_sum_signal += reconstruct_RGB2[i][j].B * reconstruct_RGB2[i][j].B;
+
+            // Calculate the square of the error (difference) for each channel
+            int64_t R_error = reconstruct_RGB[i][j].R - reconstruct_RGB2[i][j].R;
+            int64_t G_error = reconstruct_RGB[i][j].G - reconstruct_RGB2[i][j].G;
+            int64_t B_error = reconstruct_RGB[i][j].B - reconstruct_RGB2[i][j].B;
+
+            R_sum_noise += R_error * R_error;
+            G_sum_noise += G_error * G_error;
+            B_sum_noise += B_error * B_error;
+        }
+    }
+
+    // Calculate SQNR for each channel
+    R_SQNR = R_sum_signal / R_sum_noise;
+    R_SQNR = 10 * log10(R_SQNR);
+    G_SQNR = G_sum_signal / G_sum_noise;
+    G_SQNR = 10 * log10(G_SQNR);
+    B_SQNR = B_sum_signal / B_sum_noise;
+    B_SQNR = 10 * log10(B_SQNR);
+
+    printf("\ntotal R_SQNR: %.3lf\n", R_SQNR);
+    printf("total G_SQNR: %.3lf\n", G_SQNR);
+    printf("total B_SQNR: %.3lf\n", B_SQNR);
+    FILE *fp2 = fopen("QResKimberly.bmp","wb"); 
+    output_bmpRGB(reconstruct_RGB, fp_out, bmpheader, skip);  //有加誤差
+    output_bmpRGB(reconstruct_RGB2, fp2, bmpheader, skip);    //沒有加誤差的
+
+    
 
     free(qF_Data[0]);
     free(qF_Data);
@@ -535,13 +593,490 @@ void decoder1(char *fn_bmp, char *fn_Qt_Y, char *fn_Qt_Cb, char *fn_Qt_Cr, char 
     free(QT_err[0]);
     free(QT_err);
 
+    free(QT_err2[0]);
+    free(QT_err2);
+
     free(DCT_result[0]);
     free(DCT_result);
+
+    free(DCT_result2[0]);
+    free(DCT_result2);
 
     free(reconstruct_YCbCr[0]);
     free(reconstruct_YCbCr);
 
+    free(reconstruct_YCbCr2[0]);
+    free(reconstruct_YCbCr2);
+
     fclose(fp_out);
+    fclose(fp2);
+}
+
+typedef struct
+{
+    short zeroCount;
+    short value; // 非零值
+} RLEData;
+
+int readRLEDataFromFile(FILE *fp, RLEData *rleData)
+{
+
+    int rleCount = 0;
+    RLEData data;
+    while (fread(&data, sizeof(RLEData), 1, fp))
+    {
+        rleData[rleCount++] = data;
+        if (data.zeroCount == 0 && data.value == 0)
+        {
+            break; // 遇到结束標記 (0,0)
+        }
+    }
+
+    return rleCount;
+}
+int readRLEDataFromFileA(FILE *fp, RLEData *rleData)
+{
+    int rleCount = 0;
+    RLEData data;
+    int row, col;
+    char channel[10];
+    // (跳過前三個資訊不拿)
+    if (fscanf(fp, "%d %d %s ", &row, &col, channel) == 3)
+    {
+        while (fscanf(fp, "%hd %hd", &data.zeroCount, &data.value) == 2)
+        {
+            // 檢查是否為結束標記 (0, 0)
+            rleData[rleCount++] = data;
+            if (data.zeroCount == 0 && data.value == 0)
+            {
+                break; // 遇到结束標記，跳出循環
+            }
+
+            // 存儲讀取的數據
+        }
+
+        return rleCount; // 返回讀取的RLE項目數量
+    }
+}
+
+void RLEDecode(RLEData *rleData, int rleCount, short *zigzagged)
+{
+    int index = 0;
+    for (int i = 0; i < rleCount; i++)
+    {
+        int j;
+        for (j = 0; j < rleData[i].zeroCount; j++)
+        {
+            zigzagged[index++] = 0;
+        }
+        if (rleData[i].value != 0 || j != 0)
+        { // 检查是否為結束
+            zigzagged[index++] = rleData[i].value;
+        }
+        else
+        {
+            break; // 结束
+        }
+    }
+
+    // 填充剩餘的部分
+    while (index < 64)
+    {
+        zigzagged[index++] = 0;
+    }
+}
+void inverseZigZagOrder(short *zigzagged, ImgQT_YCbCr **QT_Data, int curr_row, int curr_col, const char *channel)
+{
+    int index = 0;
+    for (int s = 0; s < 16; s++)
+    {
+        for (int i = 0; i <= s; i++)
+        {
+            int j = s - i;
+            if (i < 8 && j < 8)
+            {
+                if (s % 2 == 0)
+                {
+                    // 偶數和，從上往下遍歷
+                    if (strcmp(channel, "Y") == 0)
+                    {
+                        QT_Data[j + curr_row * 8][i + curr_col * 8].Y = zigzagged[index++];
+                    }
+                    else if (strcmp(channel, "Cb") == 0)
+                    {
+                        QT_Data[j + curr_row * 8][i + curr_col * 8].Cb = zigzagged[index++];
+                    }
+                    else if (strcmp(channel, "Cr") == 0)
+                    {
+                        QT_Data[j + curr_row * 8][i + curr_col * 8].Cr = zigzagged[index++];
+                    }
+                }
+                else
+                {
+                    // 奇數和，從下往上遍歷
+                    if (strcmp(channel, "Y") == 0)
+                    {
+                        QT_Data[i + curr_row * 8][j + curr_col * 8].Y = zigzagged[index++];
+                    }
+                    else if (strcmp(channel, "Cb") == 0)
+                    {
+                        QT_Data[i + curr_row * 8][j + curr_col * 8].Cb = zigzagged[index++];
+                    }
+                    else if (strcmp(channel, "Cr") == 0)
+                    {
+                        QT_Data[i + curr_row * 8][j + curr_col * 8].Cr = zigzagged[index++];
+                    }
+                }
+            }
+        }
+    }
+}
+
+void decoder2(char *fn_bmp, char *type, char *fn_RLE_code)
+{
+    int i, j;
+    // 量化表用內建的
+    //  read output bmp file name
+    FILE *fp_out = fopen(fn_bmp, "wb");
+    if (fp_out)
+        printf("Open %s as output file!\n", fn_bmp);
+    else
+        printf("Fail to open %s as output file!\n", fn_bmp);
+
+    if (strcmp(type, "ascii") == 0)
+    {
+        int W, H, NewW, NewH, block_H, block_W;
+        FILE *fp_in = fopen(fn_RLE_code, "r");
+        fscanf(fp_in, "%d %d %d %d", &W, &H, &NewW, &NewH);
+        block_H = H / 8;
+        if (H % 8 != 0)
+            block_H++;
+        block_W = W / 8;
+        if (W % 8 != 0)
+            block_W++;
+        ImgQT_YCbCr **qF_Data = QTmalloc_2D(NewH, NewW);
+        for (int row = 0; row < block_H; row++) // 這裡放資料是 Y Cb Cr Y Cb Cr
+        {
+            for (int col = 0; col < block_W; col++)
+            {
+
+                RLEData *decodedRLEData_Y = (RLEData *)malloc(64 * sizeof(RLEData));
+                short *decodedZigzag_Y = (short *)malloc(64 * sizeof(short));
+                int decodedRLECount_Y = readRLEDataFromFileA(fp_in, decodedRLEData_Y); // Y
+                RLEDecode(decodedRLEData_Y, decodedRLECount_Y, decodedZigzag_Y);
+                inverseZigZagOrder(decodedZigzag_Y, qF_Data, row, col, "Y");
+                free(decodedZigzag_Y);
+                free(decodedRLEData_Y);
+
+                RLEData *decodedRLEData_Cb = (RLEData *)malloc(64 * sizeof(RLEData));
+                short *decodedZigzag_Cb = (short *)malloc(64 * sizeof(short));
+                int decodedRLECount_Cb = readRLEDataFromFileA(fp_in, decodedRLEData_Cb); // Cb
+                RLEDecode(decodedRLEData_Cb, decodedRLECount_Cb, decodedZigzag_Cb);
+                inverseZigZagOrder(decodedZigzag_Cb, qF_Data, row, col, "Cb");
+                free(decodedZigzag_Cb);
+                free(decodedRLEData_Cb);
+
+                RLEData *decodedRLEData_Cr = (RLEData *)malloc(64 * sizeof(RLEData));
+                short *decodedZigzag_Cr = (short *)malloc(64 * sizeof(short));
+                int decodedRLECount_Cr = readRLEDataFromFileA(fp_in, decodedRLEData_Cr); // Cr
+                RLEDecode(decodedRLEData_Cr, decodedRLECount_Cr, decodedZigzag_Cr);
+                inverseZigZagOrder(decodedZigzag_Cr, qF_Data, row, col, "Cr");
+                free(decodedZigzag_Cr);
+                free(decodedRLEData_Cr);
+            }
+        }
+
+        // DPCM 加回DC值
+        short previousDC_Y = 0, previousDC_Cb = 0, previousDC_Cr = 0;
+        short currentDC_Y, currentDC_Cb, currentDC_Cr;
+
+        for (int row = 0; row < block_H; row++)
+        {
+            for (int col = 0; col < block_W; col++)
+            {
+                // 处理 Y 分量的 DC 系数
+                currentDC_Y = qF_Data[row * 8][col * 8].Y + previousDC_Y;
+                qF_Data[row * 8][col * 8].Y = currentDC_Y;
+                previousDC_Y = currentDC_Y;
+
+                // 处理 Cb 分量的 DC 系数
+                currentDC_Cb = qF_Data[row * 8][col * 8].Cb + previousDC_Cb;
+                qF_Data[row * 8][col * 8].Cb = currentDC_Cb;
+                previousDC_Cb = currentDC_Cb;
+
+                // 处理 Cr 分量的 DC 系数
+                currentDC_Cr = qF_Data[row * 8][col * 8].Cr + previousDC_Cr;
+                qF_Data[row * 8][col * 8].Cr = currentDC_Cr;
+                previousDC_Cr = currentDC_Cr;
+            }
+        }
+        // write
+
+        Bitmap bmpheader;
+        write_header(&bmpheader, W, H);
+        printHeader(bmpheader);
+
+        // skip paddings at the end of each image line
+        int skip = (4 - (bmpheader.width * 3) % 4);
+        if (skip == 4)
+            skip = 0;
+        char skip_buf[3] = {0, 0, 0};
+
+        printf("Image size: Width: %d x Height=%d pixels, total %d bytes\n", W, H, W * H * 3);
+        printf("Image line skip=%d bytes\n", skip);
+        printf("# of 8x8 blocks: W=%d x H=%d blocks, total %d blocks\n", block_W, block_H, block_W * block_H);
+
+        ImgYCbCr **QT_err = YCBCRmalloc_2D(NewH, NewW);
+
+        // decoder 2沒有讀入err，假設 = 0
+        // decoder 2沒有讀入err，假設 = 0
+        FILE *fp_qrrY = fopen("eF_Y.raw", "rb");
+        FILE *fp_qrrCb = fopen("eF_Cb.raw", "rb");
+        FILE *fp_qrrCr = fopen("eF_Cr.raw", "rb");
+        if (fp_qrrY && fp_qrrCb && fp_qrrCr)
+            readError("eF_Y.raw", "eF_Cb.raw", "eF_Cr.raw", QT_err, NewW, NewH);
+        else
+        {
+            for (int i = 0; i < NewH; i++)
+            {
+                for (int j = 0; j < NewW; j++)
+                {
+                    QT_err[i][j].Y = 0.0;
+                    QT_err[i][j].Cb = 0.0;
+                    QT_err[i][j].Cr = 0.0;
+                }
+            }
+        }
+        // inverse Quantization
+        ImgYCbCr **DCT_result = YCBCRmalloc_2D(NewH, NewW);
+        for (int row = 0; row < block_H; row++)
+        {
+            for (int col = 0; col < block_W; col++)
+            {
+                inverse_QT(qF_Data, QT_err, DCT_result, YTable, CbCrTable, row, col);
+            }
+        }
+
+        // inverse 2D DCT
+        ImgYCbCr **reconstruct_YCbCr = YCBCRmalloc_2D(NewH, NewW);
+        for (int row = 0; row < block_H; row++)
+        {
+            for (int col = 0; col < block_W; col++)
+            {
+                inverse_DCT(DCT_result, reconstruct_YCbCr, row, col);
+            }
+        }
+
+        // YCbCr to RGB
+        ImgRGB **reconstruct_RGB = malloc_2D(H, W);
+        YCbCrtoRGB(reconstruct_YCbCr, reconstruct_RGB, H, W);
+        output_bmpRGB(reconstruct_RGB, fp_out, bmpheader, skip);
+
+        free(qF_Data[0]);
+        free(qF_Data);
+
+        free(QT_err[0]);
+        free(QT_err);
+
+        free(DCT_result[0]);
+        free(DCT_result);
+
+        free(reconstruct_YCbCr[0]);
+        free(reconstruct_YCbCr);
+
+        fclose(fp_out);
+    }
+    else if (strcmp(type, "binary") == 0)
+    {
+        int W, H, NewW, NewH, block_H, block_W;
+        FILE *fp_in = fopen(fn_RLE_code, "rb");
+        fread(&W, sizeof(int), 1, fp_in);
+        fread(&H, sizeof(int), 1, fp_in);
+        fread(&NewW, sizeof(int), 1, fp_in);
+        fread(&NewH, sizeof(int), 1, fp_in);
+        block_H = NewH / 8;
+        block_W = NewW / 8;
+        // 針對每個block 、 每個Channel 先把RLE解回程Zigzag  在從zigzag還原成block
+        ImgQT_YCbCr **qF_Data = QTmalloc_2D(NewH, NewW);
+        for (int row = 0; row < block_H; row++) // 這裡放資料是 Y Cb Cr Y Cb Cr ....
+        {
+            for (int col = 0; col < block_W; col++)
+            {
+
+                RLEData *decodedRLEData_Y = (RLEData *)malloc(64 * sizeof(RLEData));
+                RLEData *decodedRLEData_Cb = (RLEData *)malloc(64 * sizeof(RLEData));
+                RLEData *decodedRLEData_Cr = (RLEData *)malloc(64 * sizeof(RLEData));
+                short *decodedZigzag_Y = (short *)malloc(64 * sizeof(short));
+                short *decodedZigzag_Cb = (short *)malloc(64 * sizeof(short));
+                short *decodedZigzag_Cr = (short *)malloc(64 * sizeof(short));
+
+                int decodedRLECount_Y = readRLEDataFromFile(fp_in, decodedRLEData_Y);   // Y
+                int decodedRLECount_Cb = readRLEDataFromFile(fp_in, decodedRLEData_Cb); // Cb
+                int decodedRLECount_Cr = readRLEDataFromFile(fp_in, decodedRLEData_Cr); // Cr
+
+                RLEDecode(decodedRLEData_Y, decodedRLECount_Y, decodedZigzag_Y);
+                RLEDecode(decodedRLEData_Cb, decodedRLECount_Cb, decodedZigzag_Cb);
+                RLEDecode(decodedRLEData_Cr, decodedRLECount_Cr, decodedZigzag_Cr);
+
+                // zigzag还原成block
+                inverseZigZagOrder(decodedZigzag_Y, qF_Data, row, col, "Y");
+                inverseZigZagOrder(decodedZigzag_Cb, qF_Data, row, col, "Cb");
+                inverseZigZagOrder(decodedZigzag_Cr, qF_Data, row, col, "Cr");
+
+                // 释放分配的内存
+                free(decodedRLEData_Y);
+                free(decodedRLEData_Cb);
+                free(decodedRLEData_Cr);
+                free(decodedZigzag_Y);
+                free(decodedZigzag_Cb);
+                free(decodedZigzag_Cr);
+            }
+        }
+
+        // for (int row = 0; row < block_H; row++) // 這裡放資料是 Y Y Y Y... Cb Cb Cb... Cr Cr Cr....
+        // {
+        //     for (int col = 0; col < block_W; col++)
+        //     {
+
+        //         RLEData *decodedRLEData_Y = (RLEData *)malloc(64 * sizeof(RLEData));
+        //         short *decodedZigzag_Y = (short *)malloc(64 * sizeof(short));
+        //         int decodedRLECount_Y = readRLEDataFromFile(fp_in, decodedRLEData_Y); // Y
+        //         RLEDecode(decodedRLEData_Y, decodedRLECount_Y, decodedZigzag_Y);
+        //         inverseZigZagOrder(decodedZigzag_Y, qF_Data, row, col, "Y");
+        //         free(decodedZigzag_Y);
+        //         free(decodedRLEData_Y);
+        //     }
+        // }
+
+        // for (int row = 0; row < block_H; row++)
+        // {
+        //     for (int col = 0; col < block_W; col++)
+        //     {
+
+        //         RLEData *decodedRLEData_Cb = (RLEData *)malloc(64 * sizeof(RLEData));
+        //         short *decodedZigzag_Cb = (short *)malloc(64 * sizeof(short));
+        //         int decodedRLECount_Cb = readRLEDataFromFile(fp_in, decodedRLEData_Cb); // Y
+        //         RLEDecode(decodedRLEData_Cb, decodedRLECount_Cb, decodedZigzag_Cb);
+        //         inverseZigZagOrder(decodedZigzag_Cb, qF_Data, row, col, "Cb");
+        //         free(decodedZigzag_Cb);
+        //         free(decodedRLEData_Cb);
+        //     }
+        // }
+        // for (int row = 0; row < block_H; row++)
+        // {
+        //     for (int col = 0; col < block_W; col++)
+        //     {
+
+        //         RLEData *decodedRLEData_Cr = (RLEData *)malloc(64 * sizeof(RLEData));
+        //         short *decodedZigzag_Cr = (short *)malloc(64 * sizeof(short));
+        //         int decodedRLECount_Cr = readRLEDataFromFile(fp_in, decodedRLEData_Cr); // Y
+        //         RLEDecode(decodedRLEData_Cr, decodedRLECount_Cr, decodedZigzag_Cr);
+        //         inverseZigZagOrder(decodedZigzag_Cr, qF_Data, row, col, "Cr");
+        //         free(decodedZigzag_Cr);
+        //         free(decodedRLEData_Cr);
+        //     }
+        // }
+        // DPCM 加回DC值
+        short previousDC_Y = 0, previousDC_Cb = 0, previousDC_Cr = 0;
+        short currentDC_Y, currentDC_Cb, currentDC_Cr;
+
+        for (int row = 0; row < block_H; row++)
+        {
+            for (int col = 0; col < block_W; col++)
+            {
+                // 处理 Y 分量的 DC 系数
+                currentDC_Y = qF_Data[row * 8][col * 8].Y + previousDC_Y;
+                qF_Data[row * 8][col * 8].Y = currentDC_Y;
+                previousDC_Y = currentDC_Y;
+
+                // 处理 Cb 分量的 DC 系数
+                currentDC_Cb = qF_Data[row * 8][col * 8].Cb + previousDC_Cb;
+                qF_Data[row * 8][col * 8].Cb = currentDC_Cb;
+                previousDC_Cb = currentDC_Cb;
+
+                // 处理 Cr 分量的 DC 系数
+                currentDC_Cr = qF_Data[row * 8][col * 8].Cr + previousDC_Cr;
+                qF_Data[row * 8][col * 8].Cr = currentDC_Cr;
+                previousDC_Cr = currentDC_Cr;
+            }
+        }
+        // write header
+        Bitmap bmpheader;
+        write_header(&bmpheader, W, H);
+        printHeader(bmpheader);
+
+        // skip paddings at the end of each image line
+        int skip = (4 - (bmpheader.width * 3) % 4);
+        if (skip == 4)
+            skip = 0;
+        char skip_buf[3] = {0, 0, 0};
+
+        // 8x8, if not multiples of 8, then bitmap padded, i.e. one more block
+
+        printf("Image size: Width: %d x Height=%d pixels, total %d bytes\n", W, H, W * H * 3);
+        printf("Image line skip=%d bytes\n", skip);
+        printf("# of 8x8 blocks: W=%d x H=%d blocks, total %d blocks\n", block_W, block_H, block_W * block_H);
+
+        // read fn_eF_Y, fn_eF_Cb, fn_eF_Cr
+        ImgYCbCr **QT_err = YCBCRmalloc_2D(NewH, NewW);
+
+        // decoder 2沒有讀入err，假設 = 0
+        FILE *fp_qrrY = fopen("eF_Y.raw", "rb");
+        FILE *fp_qrrCb = fopen("eF_Cb.raw", "rb");
+        FILE *fp_qrrCr = fopen("eF_Cr.raw", "rb");
+        if (fp_qrrY && fp_qrrCb && fp_qrrCr)
+            readError("eF_Y.raw", "eF_Cb.raw", "eF_Cr.raw", QT_err, NewW, NewH);
+        else
+        {
+            for (int i = 0; i < NewH; i++)
+            {
+                for (int j = 0; j < NewW; j++)
+                {
+                    QT_err[i][j].Y = 0.0;
+                    QT_err[i][j].Cb = 0.0;
+                    QT_err[i][j].Cr = 0.0;
+                }
+            }
+        }
+        // inverse Quantization
+        ImgYCbCr **DCT_result = YCBCRmalloc_2D(NewH, NewW);
+        for (int row = 0; row < block_H; row++)
+        {
+            for (int col = 0; col < block_W; col++)
+            {
+                inverse_QT(qF_Data, QT_err, DCT_result, YTable, CbCrTable, row, col);
+            }
+        }
+
+        // inverse 2D DCT
+        ImgYCbCr **reconstruct_YCbCr = YCBCRmalloc_2D(NewH, NewW);
+        for (int row = 0; row < block_H; row++)
+        {
+            for (int col = 0; col < block_W; col++)
+            {
+                inverse_DCT(DCT_result, reconstruct_YCbCr, row, col);
+            }
+        }
+
+        // YCbCr to RGB
+        ImgRGB **reconstruct_RGB = malloc_2D(H, W);
+        YCbCrtoRGB(reconstruct_YCbCr, reconstruct_RGB, H, W);
+        output_bmpRGB(reconstruct_RGB, fp_out, bmpheader, skip);
+
+        free(qF_Data[0]);
+        free(qF_Data);
+
+        free(QT_err[0]);
+        free(QT_err);
+
+        free(DCT_result[0]);
+        free(DCT_result);
+
+        free(reconstruct_YCbCr[0]);
+        free(reconstruct_YCbCr);
+
+        fclose(fp_out);
+    }
 }
 int main(int argc, char **argv)
 {
@@ -577,9 +1112,14 @@ int main(int argc, char **argv)
         char *fn_eF_Cr = argv[12];
         decoder1(fn_bmp, fn_Qt_Y, fn_Qt_Cb, fn_Qt_Cr, fn_dim, fn_qF_Y, fn_qF_Cb, fn_qF_Cr, fn_eF_Y, fn_eF_Cb, fn_eF_Cr);
     }
-    // else if(strcmp(mode,"2") == 0){
+    else if (strcmp(mode, "2") == 0)
+    {
+        char *fn_bmp = argv[2];
+        char *type = argv[3]; // ascii or binary
+        char *fn_RLE_code = argv[4];
 
-    // }
+        decoder2(fn_bmp, type, fn_RLE_code);
+    }
     // else if(strcmp(mode,"3") == 0){
 
     // }
